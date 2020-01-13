@@ -33,238 +33,24 @@ static int x3_pos_old = 0;
 
 static int r_old = 0;
 static int delta_r = 0;
-static int delta_y3 = 0;
-static int delta_x3 = 0;
-int interaction = 1;
 
-int modelPart = 5;
+int interaction = 1;
+int model = 1;
 
 static int delta_x = 0, delta_y = 0;        // ró¿nica pomiêdzy pozycj¹ bie¿¹c¹
 									  // i poprzedni¹ kursora myszy
 
 GLbyte* LoadTGAImage(const char* FileName, GLint* ImWidth, GLint* ImHeight, GLint* ImComponents, GLenum* ImFormat);
-
 GLbyte* pBytes;
 GLint ImWidth, ImHeight, ImComponents;
 GLenum ImFormat;
 
-const int N = 50;
-
-// struktura dla wspolrzednych jajka
-struct p {
-	float x, y, z;
-};
-
-p matrix[N][N];
-
-void keys(unsigned char key, int x, int y);
-
-void generateMatrix()
-{
-	float u, v;
-	for (float i = 0; i < N; i++)
-	{
-		u = i / (N - 1);
-		for (float j = 0; j < N; j++)
-		{
-			v = j / (N - 1);
-			matrix[(int)i][(int)j].x = (-90 * pow(u, 5) + 225 * pow(u, 4) - 270 * pow(u, 3) + 180 * pow(u, 2) - 45 * u) * cos(v * PI);
-			matrix[(int)i][(int)j].y = 160 * pow(u, 4) - 320 * pow(u, 3) + 160 * pow(u, 2);
-			matrix[(int)i][(int)j].z = (-90 * pow(u, 5) + 225 * pow(u, 4) - 270 * pow(u, 3) + 180 * pow(u, 2) - 45 * u) * sin(v * PI);
-		}
-	}
-
-}
-
-void EggTriangle(int n)
-{
-	float u, v;
-	glRotated(0.0, 1.0, 0.0, 0.0);
-	glTranslated(0.0f, -2.0f, 0.0f);
-	for (int i = 0; i < n - 1; i++)
-	{
-		u = i / (N - 1);
-		for (int j = 0; j < n - 1; j++)
-		{
-			v = j / (N - 1);
-			glBegin(GL_TRIANGLES);
-
-				glColor3f(1.0f, 1.0f, 1.0f);
-				glVertex3f(matrix[i][j].x, matrix[i][j].y, matrix[i][j].z);
-				glTexCoord2f(i,j);
-				glVertex3f(matrix[i + 1][j].x, matrix[i + 1][j].y, matrix[i + 1][j].z);
-				glVertex3f(matrix[i + 1][j + 1].x, matrix[i + 1][j + 1].y, matrix[i + 1][j + 1].z);
-
-
-				glColor3f(0.0f, 0.0f, 1.0f);
-				glVertex3f(matrix[i][j].x, matrix[i][j].y, matrix[i][j].z);
-				glTexCoord2f(i, j);
-				glVertex3f(matrix[i][j + 1].x, matrix[i][j + 1].y, matrix[i][j + 1].z);
-
-				glVertex3f(matrix[i + 1][j + 1].x, matrix[i + 1][j + 1].y, matrix[i + 1][j + 1].z);
-
-			glEnd();
-		}
-
-	}
-}
-
-void drawTriangle()
+void drawCube()
 {
 	glBegin(GL_TRIANGLES);
-
-		// Ustawienie koloru na bia³y
-		glColor3f(1.0f, 1.0f, 1.0f);
-
-		//glNormal3f(0.0, 0.0, 1.0);
-		glVertex3f(-3.0f, 0.0f, 0.0f);
-		glTexCoord2f(0.0f, 0.0f);
-
-		//glNormal3f(0.0, 0.0, 1.0);
-		glVertex3f(3.0f, 0.0f, 0.0f);
-		glTexCoord2f(1.0f, 0.6f);
-
-		//glNormal3f(0.0, 0.0, 1.0);
-		glVertex3f(0.0f, 7.0f, 0.0f);
-		glTexCoord2f(0.5f, 1.0f);
-
-	glEnd();
-}
-
-void firstTexture()
-{
-
-	// ..................................       
-	//       Pozosta³a czêœæ funkcji MyInit()
-
-	// ..................................
-
-/*************************************************************************************/
-
-// Teksturowanie bêdzie prowadzone tyko po jednej stronie œciany
-
-	glEnable(GL_CULL_FACE);
-
-	/*************************************************************************************/
-
-	//  Przeczytanie obrazu tekstury z pliku o nazwie tekstura.tga
-
-	pBytes = LoadTGAImage("F:/Grafika(OpenGL)/TeksturowanieObiektow/tekstury/P3_t.tga", &ImWidth, &ImHeight, &ImComponents, &ImFormat);
-
-	/*************************************************************************************/
-
-   // Zdefiniowanie tekstury 2-D
-
-	glTexImage2D(GL_TEXTURE_2D, 0, ImComponents, ImWidth, ImHeight, 0, ImFormat, GL_UNSIGNED_BYTE, pBytes);
-
-	/*************************************************************************************/
-
-	// Zwolnienie pamiêci
-
-	free(pBytes);
-
-	/*************************************************************************************/
-
-	// W³¹czenie mechanizmu teksturowania
-
-	glEnable(GL_TEXTURE_2D);
-
-	/*************************************************************************************/
-
-	// Ustalenie trybu teksturowania
-
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-	/*************************************************************************************/
-
-	// Okreœlenie sposobu nak³adania tekstur
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-}
-
-void secondTexture()
-{
-
-	// ..................................       
-	//       Pozosta³a czêœæ funkcji MyInit()
-
-	// ..................................
-
-/*************************************************************************************/
-
-// Teksturowanie bêdzie prowadzone tyko po jednej stronie œciany
-
-	glEnable(GL_CULL_FACE);
-
-	/*************************************************************************************/
-
-	//  Przeczytanie obrazu tekstury z pliku o nazwie tekstura.tga
-
-	pBytes = LoadTGAImage("F:/Grafika(OpenGL)/TeksturowanieObiektow/tekstury/korwin.tga", &ImWidth, &ImHeight, &ImComponents, &ImFormat);
-
-	/*************************************************************************************/
-
-   // Zdefiniowanie tekstury 2-D
-
-	glTexImage2D(GL_TEXTURE_2D, 0, ImComponents, ImWidth, ImHeight, 0, ImFormat, GL_UNSIGNED_BYTE, pBytes);
-
-	/*************************************************************************************/
-
-	// Zwolnienie pamiêci
-
-	free(pBytes);
-
-	/*************************************************************************************/
-
-	// W³¹czenie mechanizmu teksturowania
-
-	glEnable(GL_TEXTURE_2D);
-
-	/*************************************************************************************/
-
-	// Ustalenie trybu teksturowania
-
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-	/*************************************************************************************/
-
-	// Okreœlenie sposobu nak³adania tekstur
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-}
-
-void thirdTexture()
-{
-	// Teksturowanie bêdzie prowadzone tyko po jednej stronie œciany
-	glEnable(GL_CULL_FACE);
-
-	//  Przeczytanie obrazu tekstury z pliku o nazwie tekstura.tga
-	pBytes = LoadTGAImage("F:/Grafika(OpenGL)/TeksturowanieObiektow/tekstury/D7_t.tga", &ImWidth, &ImHeight, &ImComponents, &ImFormat);
-
-   // Zdefiniowanie tekstury 2-D
-	glTexImage2D(GL_TEXTURE_2D, 0, ImComponents, ImWidth, ImHeight, 0, ImFormat, GL_UNSIGNED_BYTE, pBytes);
-
-	// Zwolnienie pamiêci
-	free(pBytes);
-
-	// W³¹czenie mechanizmu teksturowania
-	glEnable(GL_TEXTURE_2D);
-
-	// Ustalenie trybu teksturowania
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-	// Okreœlenie sposobu nak³adania tekstur
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-}
-
-void drawPiramidPart5()
-{
-	glBegin(GL_TRIANGLES);
-
-	// 1 trojkat
+	// Pierwsza œciana DONE 
+	{
+		// Pierwszy trójkat
 		glTexCoord2f(0.0f, 0.0f);
 		glVertex3f(-2.0f, 2.0f, 0.0f);
 
@@ -274,7 +60,7 @@ void drawPiramidPart5()
 		glTexCoord2f(1.0f, 0.0f);
 		glVertex3f(-2.0f, 2.0f, 4.0f);
 
-	// 2 trojk¹t
+		// Drugi trójk¹t
 		glTexCoord2f(0.0f, 0.0f);
 		glVertex3f(-2.0f, 2.0f, 0.0f);
 
@@ -283,91 +69,225 @@ void drawPiramidPart5()
 
 		glTexCoord2f(1.0f, 1.0f);
 		glVertex3f(2.0f, 2.0f, 4.0f);
+	}
 
-	// druga sciana boczna
+	// Druga œciana
+	{
+		// Pierwszy trójkat
+		glTexCoord2f(0.0f, 1.0f);
+		glVertex3f(-2.0f, 2.0f, 0.0f);
+
+		glTexCoord2f(1.0f, 1.0f);
+		glVertex3f(-2.0f, 6.0f, 0.0f);
+
+		glTexCoord2f(0.0f, 0.0f);
+		glVertex3f(2.0f, 2.0f, 0.0f);
+		
+		// Drugi trójk¹t
+		glTexCoord2f(0.0f, 0.0f);
+		glVertex3f(2.0f, 2.0f, 0.0f);
+
+		glTexCoord2f(1.0f, 1.0f);
+		glVertex3f(-2.0f, 6.0f, 0.0f);
+
+		glTexCoord2f(1.0f, 0.0f);
+		glVertex3f(2.0f, 6.0f, 0.0f);
+	}
+
+	// Trzecia œciana
+	{
+		// Pierwszy trójkat
+		glTexCoord2f(0.0f, 1.0f);
+		glVertex3f(-2.0f, 2.0f, 4.0f);
+
+		glTexCoord2f(1.0f, 1.0f);
+		glVertex3f(-2.0f, 6.0f, 4.0f);
+
+		glTexCoord2f(0.0f, 0.0f);
+		glVertex3f(-2.0f, 2.0f, 0.0f);
+
+		// Drugi trójk¹t
+		glTexCoord2f(0.0f, 0.0f);
+		glVertex3f(-2.0f, 2.0f, 0.0f);
+
+		glTexCoord2f(1.0f, 1.0f);
+		glVertex3f(-2.0f, 6.0f, 4.0f);
+
+		glTexCoord2f(1.0f, 0.0f);
+		glVertex3f(-2.0f, 6.0f, 0.0f);
+	}
+
+	// Czwarta œciana
+	{
+		// Pierwszy trójkat
 		glTexCoord2f(0.0f, 0.0f);
 		glVertex3f(-2.0f, 2.0f, 4.0f);
 
 		glTexCoord2f(0.0f, 1.0f);
 		glVertex3f(2.0f, 2.0f, 4.0f);
 
-		glTexCoord2f(1.0f, 0.5f);
-		glVertex3f(0.0f, 8.0f, 2.0f);
+		glTexCoord2f(1.0f, 1.0f);
+		glVertex3f(2.0f, 6.0f, 4.0f);
 
-	glEnd();
+		// Drugi trójk¹t
+		glTexCoord2f(1.0f, 1.0f);
+		glVertex3f(2.0f, 6.0f, 4.0f);
 
-	
-	/*
-	// pierwsza sciana boczna
-	glBegin(GL_TRIANGLES);
+		glTexCoord2f(1.0f, 0.0f);
+		glVertex3f(-2.0f, 6.0f, 4.0f);
 
-
-		glVertex3f(-2.0f, 2.0f, 0.0f);
 		glTexCoord2f(0.0f, 0.0f);
+		glVertex3f(-2.0f, 2.0f, 4.0f);
+	}
 
+	// Pi¹ta œciana
+	{
+		// Pierwszy trójkat
+		glTexCoord2f(0.0f, 1.0f);
 		glVertex3f(2.0f, 2.0f, 0.0f);
-		glTexCoord2f(0.8f, 1.0f);
 
-		glVertex3f(0.0f, 8.0f, 2.0f);
-		glTexCoord2f(0.5f, 1.0f);
+		glTexCoord2f(1.0f, 1.0f);
+		glVertex3f(2.0f, 6.0f, 0.0f);
 
-	glEnd();
+		glTexCoord2f(1.0f, 0.0f);
+		glVertex3f(2.0f, 6.0f, 4.0f);
 
+		// Drugi trójk¹t
+		glTexCoord2f(0.0f, 1.0f);
+		glVertex3f(2.0f, 2.0f, 0.0f);
 
+		glTexCoord2f(1.0f, 0.0f);
+		glVertex3f(2.0f, 6.0f, 4.0f);
 
-	// druga sciana boczna
-	glBegin(GL_TRIANGLES);
-
-
-	glVertex3f(-2.0f, 2.0f, 4.0f);
-	glTexCoord2f(0.0f, 0.0f);
-
-	glVertex3f(2.0f, 2.0f, 4.0f);
-	glTexCoord2f(1.0f, 0.5f);
-
-	glVertex3f(0.0f, 8.0f, 2.0f);
-	glTexCoord2f(0.5f, 1.0f);
-
-	glEnd();
-
-
-
-	// trzecia sciana trojkatna
-	glBegin(GL_TRIANGLES);
-
-	glVertex3f(-2.0f, 2.0f, 0.0f);
-	glTexCoord2f(0.0f, 0.0f);
-
-	glVertex3f(-2.0f, 2.0f, 4.0f);
-	glTexCoord2f(1.0f, 0.5f);
-
-	glVertex3f(0.0f, 8.0f, 2.0f);
-	glTexCoord2f(0.5f, 1.0f);
-
-	glEnd();
-
-
-	// czwarta sciana trojkatna
-	glBegin(GL_TRIANGLES);
-
+		glTexCoord2f(0.0f, 0.0f);
 		glVertex3f(2.0f, 2.0f, 4.0f);
+	}
+	// Szósta œciana
+	{
+		// Pierwszy trójkat
 		glTexCoord2f(0.0f, 0.0f);
+		glVertex3f(-2.0f, 6.0f, 4.0f);
 
-		glVertex3f(2.0f, 2.0f, 0.0f);
-		glTexCoord2f(1.0f, 0.5f);
+		glTexCoord2f(0.0f, 1.0f);
+		glVertex3f(2.0f, 6.0f, 4.0f);
 
-		glVertex3f(0.0f, 8.0f, 2.0f);
-		glTexCoord2f(0.5f, 1.0f);
+		glTexCoord2f(1.0f, 1.0f);
+		glVertex3f(2.0f, 6.0f, 0.0f);
 
+		// Drugi trójk¹t
+		glTexCoord2f(0.0f, 0.0f);
+		glVertex3f(-2.0f, 6.0f, 4.0f);
+
+		glTexCoord2f(1.0f, 1.0f);
+		glVertex3f(2.0f, 6.0f, 0.0f);
+
+		glTexCoord2f(1.0f, 0.0f);
+		glVertex3f(-2.0f, 6.0f, 0.0f);
+	}
 	glEnd();
-*/
-
 }
 
+void changeTexture()
+{
+	// Teksturowanie bêdzie prowadzone tyko po jednej stronie œciany
+	glEnable(GL_CULL_FACE);
+
+	// Zdefiniowanie tekstury 2-D
+	glTexImage2D(GL_TEXTURE_2D, 0, ImComponents, ImWidth, ImHeight, 0, ImFormat, GL_UNSIGNED_BYTE, pBytes);
+
+	// Zwolnienie pamiêci
+	free(pBytes);
+
+	// W³¹czenie mechanizmu teksturowania
+	glEnable(GL_TEXTURE_2D);
+
+	// Ustalenie trybu teksturowania
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+	// Okreœlenie sposobu nak³adania tekstur
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}
+
+void drawPiramid()
+{
+	glBegin(GL_TRIANGLES);
+	// Podstawa
+	{
+		// Pierwszt trójkat podstawy
+		glTexCoord2f(0.0f, 0.0f);
+		glVertex3f(-2.0f, 2.0f, 0.0f);
+
+		glTexCoord2f(1.0f, 1.0f);
+		glVertex3f(2.0f, 2.0f, 4.0f);
+
+		glTexCoord2f(1.0f, 0.0f);
+		glVertex3f(-2.0f, 2.0f, 4.0f);
+
+		// Drugi trójk¹t podstawy
+		glTexCoord2f(0.0f, 0.0f);
+		glVertex3f(-2.0f, 2.0f, 0.0f);
+
+		glTexCoord2f(0.0f, 1.0f);
+		glVertex3f(2.0f, 2.0f, 0.0f);
+
+		glTexCoord2f(1.0f, 1.0f);
+		glVertex3f(2.0f, 2.0f, 4.0f);
+	}
+
+	// Pierwsza œciana boczna
+	{
+		glTexCoord2f(1.0f, 0.5f);
+		glVertex3f(0.0f, 7.0f, 2.0f);
+
+		glTexCoord2f(0.0f, 0.0f);
+		glVertex3f(2.0f, 2.0f, 0.0f);
+
+		glTexCoord2f(0.5f, 1.0f);
+		glVertex3f(-2.0f, 2.0f, 0.0f);
+	}
+
+	// Druga sciana boczna
+	{
+		glTexCoord2f(0.0f, 0.0f);
+		glVertex3f(-2.0f, 2.0f, 4.0f);
+
+		glTexCoord2f(0.5f, 1.0f);
+		glVertex3f(2.0f, 2.0f, 4.0f);
+
+		glTexCoord2f(1.0, 0.5f);
+		glVertex3f(0.0f, 7.0f, 2.0f);
+	}
+
+	// Trzecia sciana trojkatna
+	{
+		glTexCoord2f(0.0f, 0.0f);
+		glVertex3f(-2.0f, 2.0f, 0.0f);
+
+		glTexCoord2f(0.5f, 1.0f);
+		glVertex3f(-2.0f, 2.0f, 4.0f);
+
+		glTexCoord2f(1.0f, 0.5f);
+		glVertex3f(0.0f, 7.0f, 2.0f);
+	}
+
+	// Czwarta sciana trojkatna
+	{
+		glTexCoord2f(0.0f, 0.0f);
+		glVertex3f(2.0f, 2.0f, 4.0f);
+
+		glTexCoord2f(0.5f, 1.0f);
+		glVertex3f(2.0f, 2.0f, 0.0f);
+
+		glTexCoord2f(1.0f, 0.5f);
+		glVertex3f(0.0f, 7.0f, 2.0f);
+
+	}
+	glEnd();
+}
 
 void Mouse(int btn, int state, int x, int y)
 {
-
 	if (btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
 		x_pos_old = x;        // przypisanie aktualnie odczytanej pozycji kursora jako pozycji poprzedniej
@@ -389,7 +309,6 @@ void Mouse(int btn, int state, int x, int y)
 /*************************************************************************************/
 // Funkcja "monitoruje" po³o¿enie kursora myszy i ustawia wartoœci odpowiednich
 // zmiennych globalnych
-
 void Motion(GLsizei x, GLsizei y)
 {
 
@@ -397,8 +316,6 @@ void Motion(GLsizei x, GLsizei y)
 	delta_y = y - y_pos_old;
 
 	delta_y2 = y - y2_pos_old;
-	delta_y3 = y - y3_pos_old;
-	delta_x3 = x - x_pos_old;
 	delta_r = y - r_old;
 
 	y2_pos_old = y;
@@ -408,8 +325,6 @@ void Motion(GLsizei x, GLsizei y)
 	y_pos_old = y;
 	glutPostRedisplay();     // przerysowanie obrazu sceny
 }
-
-/*************************************************************************************/
 
 void Axes(void)
 {
@@ -428,28 +343,21 @@ void Axes(void)
 
 	glColor3f(1.0f, 0.0f, 0.0f);  // kolor rysowania osi - czerwony
 	glBegin(GL_LINES); // rysowanie osi x
-
-	glVertex3fv(x_min);
-	glVertex3fv(x_max);
-
+		glVertex3fv(x_min);
+		glVertex3fv(x_max);
 	glEnd();
 
 	glColor3f(0.0f, 1.0f, 0.0f);  // kolor rysowania - zielony
 	glBegin(GL_LINES);  // rysowanie osi y
-
-	glVertex3fv(y_min);
-	glVertex3fv(y_max);
-
+		glVertex3fv(y_min);
+		glVertex3fv(y_max);
 	glEnd();
 
 	glColor3f(0.0f, 0.0f, 1.0f);  // kolor rysowania - niebieski
 	glBegin(GL_LINES); // rysowanie osi z
-
-	glVertex3fv(z_min);
-	glVertex3fv(z_max);
-
+		glVertex3fv(z_min);
+		glVertex3fv(z_max);
 	glEnd();
-
 }
 
 /*************************************************************************************/
@@ -459,10 +367,21 @@ void Axes(void)
 
 void RenderScene(void)
 {
-
-	if (interaction == 1) firstTexture();
-	if (interaction == 2) secondTexture();
-	if (interaction == 3) thirdTexture();
+	if (interaction == 1)
+	{
+		pBytes = LoadTGAImage("F:/Grafika(OpenGL)/[lab6]TeksturowanieObiektow/tekstury/P3_t.tga", &ImWidth, &ImHeight, &ImComponents, &ImFormat);
+		changeTexture();
+	}
+	if (interaction == 2)
+	{
+		pBytes = LoadTGAImage("F:/Grafika(OpenGL)/[lab6]TeksturowanieObiektow/tekstury/korwin.tga", &ImWidth, &ImHeight, &ImComponents, &ImFormat);
+		changeTexture();
+	}
+	if (interaction == 3)
+	{
+		pBytes = LoadTGAImage("F:/Grafika(OpenGL)/[lab6]TeksturowanieObiektow/tekstury/D7_t.tga", &ImWidth, &ImHeight, &ImComponents, &ImFormat);
+		changeTexture();
+	}
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// Czyszczenie okna aktualnym kolorem czyszcz¹cym
@@ -496,19 +415,16 @@ void RenderScene(void)
 	// Narysowanie czajnika 
 
 	//drawTriangle();
-	if(modelPart == 5) drawPiramidPart5();
-	if(modelPart == 0) EggTriangle(N);
-	// Narysowanie trój¹ta
+	if(model == 1) drawPiramid();
+	if (model == 2) drawCube();
 
 	glFlush();
 	// Przekazanie poleceñ rysuj¹cych do wykonania
 
 	glutSwapBuffers();
 }
-/*************************************************************************************/
 
 // Funkcja ustalaj¹ca stan renderowania
-
 void MyInit(void)
 {
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -612,58 +528,7 @@ void MyInit(void)
 	glEnable(GL_LIGHT1);     // w³¹czenie Ÿród³a o numerze 1
 	glEnable(GL_LIGHT2);     // w³¹czenie Ÿród³a o numerze 1
 	glEnable(GL_DEPTH_TEST); // w³¹czenie mechanizmu z-bufora
-
-// Teksturowanie bêdzie prowadzone tyko po jednej stronie œciany
-
-	glEnable(GL_CULL_FACE);
-
-	/*************************************************************************************/
-
-	//  Przeczytanie obrazu tekstury z pliku o nazwie tekstura.tga
-
-	pBytes = LoadTGAImage("F:/Grafika(OpenGL)/TeksturowanieObiektow/tekstury/P3_t.tga", &ImWidth, &ImHeight, &ImComponents, &ImFormat);
-
-	/*************************************************************************************/
-
-   // Zdefiniowanie tekstury 2-D
-
-	glTexImage2D(GL_TEXTURE_2D, 0, ImComponents, ImWidth, ImHeight, 0, ImFormat, GL_UNSIGNED_BYTE, pBytes);
-
-	/*************************************************************************************/
-
-	// Zwolnienie pamiêci
-
-	free(pBytes);
-
-	/*************************************************************************************/
-
-	// W³¹czenie mechanizmu teksturowania
-
-	glEnable(GL_TEXTURE_2D);
-
-	/*************************************************************************************/
-
-	// Ustalenie trybu teksturowania
-
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-	/*************************************************************************************/
-
-	// Okreœlenie sposobu nak³adania tekstur
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-
-	// ..................................
-	//       Pozosta³a czêœæ funkcji MyInit()
-
-	// ..................................
-
 }
-
-
-/*************************************************************************************/
 
 // Funkcja ma za zadanie utrzymanie sta³ych proporcji rysowanych
 // w przypadku zmiany rozmiarów okna.
@@ -696,22 +561,31 @@ void ChangeSize(GLsizei horizontal, GLsizei vertical)
 
 	glLoadIdentity();
 	// Czyszczenie macierzy bie¿¹cej
-
 }
 
-/*************************************************************************************/
+void keys(unsigned char key, int x, int y)
+{
+	// tekstury
+	if (key == 't') interaction = 1;
+	if (key == 'k') interaction = 2;
+	if (key == 'b') interaction = 3;
+
+	// modele
+	if (key == '1') model = 1;
+	if (key == '2') model = 2;
+
+	RenderScene(); // przerysowanie obrazu sceny
+}
 
 // G³ówny punkt wejœcia programu. Program dzia³a w trybie konsoli
-
 int main(void)
 {
-	generateMatrix();
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 
 	glutInitWindowSize(400, 400);
 	glutInitWindowPosition(580, 200);
 
-	glutCreateWindow("Rzutowanie perspektywiczne");
+	glutCreateWindow("Teksturowanie obiektów");
 
 	glutDisplayFunc(RenderScene);
 	// Okreœlenie, ¿e funkcja RenderScene bêdzie funkcj¹ zwrotn¹
@@ -741,23 +615,6 @@ int main(void)
 	// Funkcja uruchamia szkielet biblioteki GLUT
 }
 
-void keys(unsigned char key, int x, int y)
-{
-	if (key == 't') interaction = 1;
-	if (key == 'k') interaction = 2;
-	if (key == 'b') interaction = 3;
-
-	if (key == '1') modelPart = 1;
-	if (key == '2') modelPart = 2;
-	if (key == '3') modelPart = 3;
-	if (key == '4') modelPart = 4;
-	if (key == '5') modelPart = 5;
-
-	if (key == '0') modelPart = 0;
-
-	RenderScene(); // przerysowanie obrazu sceny
-}
-
 /*************************************************************************************/
  // Funkcja wczytuje dane obrazu zapisanego w formacie TGA w pliku o nazwie
  // FileName, alokuje pamiêæ i zwraca wskaŸnik (pBits) do bufora w którym
@@ -769,8 +626,6 @@ void keys(unsigned char key, int x, int y)
  // Dzia³a tylko dla obrazów wykorzystuj¹cych 8, 24, or 32 bitowy kolor.
  // Nie obs³uguje plików w formacie TGA kodowanych z kompresj¹ RLE.
 /*************************************************************************************/
-
-
 GLbyte* LoadTGAImage(const char* FileName, GLint* ImWidth, GLint* ImHeight, GLint* ImComponents, GLenum* ImFormat)
 {
 
@@ -803,11 +658,7 @@ GLbyte* LoadTGAImage(const char* FileName, GLint* ImWidth, GLint* ImHeight, GLin
 	short sDepth;
 	GLbyte* pbitsperpixel = NULL;
 
-
-	/*************************************************************************************/
-
 	// Wartoœci domyœlne zwracane w przypadku b³êdu
-
 	*ImWidth = 0;
 	*ImHeight = 0;
 	*ImFormat = GL_BGR_EXT;
@@ -817,41 +668,23 @@ GLbyte* LoadTGAImage(const char* FileName, GLint* ImWidth, GLint* ImHeight, GLin
 	if (pFile == NULL)
 		return NULL;
 
-	/*************************************************************************************/
 	// Przeczytanie nag³ówka pliku 
-
-
 	fread(&tgaHeader, sizeof(TGAHEADER), 1, pFile);
 
-
-	/*************************************************************************************/
-
 	// Odczytanie szerokoœci, wysokoœci i g³êbi obrazu
-
 	*ImWidth = tgaHeader.width;
 	*ImHeight = tgaHeader.height;
 	sDepth = tgaHeader.bitsperpixel / 8;
 
-
-	/*************************************************************************************/
 	// Sprawdzenie, czy g³êbia spe³nia za³o¿one warunki (8, 24, lub 32 bity)
-
 	if (tgaHeader.bitsperpixel != 8 && tgaHeader.bitsperpixel != 24 && tgaHeader.bitsperpixel != 32)
 		return NULL;
 
-	/*************************************************************************************/
 
 	// Obliczenie rozmiaru bufora w pamiêci
-
-
 	lImageSize = tgaHeader.width * tgaHeader.height * sDepth;
 
-
-	/*************************************************************************************/
-
 	// Alokacja pamiêci dla danych obrazu
-
-
 	pbitsperpixel = (GLbyte*)malloc(lImageSize * sizeof(GLbyte));
 
 	if (pbitsperpixel == NULL)
@@ -863,12 +696,7 @@ GLbyte* LoadTGAImage(const char* FileName, GLint* ImWidth, GLint* ImHeight, GLin
 		return NULL;
 	}
 
-
-	/*************************************************************************************/
-
 	// Ustawienie formatu OpenGL
-
-
 	switch (sDepth)
 
 	{
@@ -899,14 +727,7 @@ GLbyte* LoadTGAImage(const char* FileName, GLint* ImWidth, GLint* ImHeight, GLin
 
 	};
 
-
-
 	fclose(pFile);
 	return pbitsperpixel;
 
 }
-
-/*************************************************************************************/
-
-
-/*************************************************************************************/
